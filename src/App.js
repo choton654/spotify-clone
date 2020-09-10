@@ -1,26 +1,41 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
+import SpotifyWebApi from 'spotify-web-api-js';
 import './App.css';
+import Login from './Login';
+import Player from './Player';
+import { actionType } from './reducer';
+import { getTokenFromResponse } from './Spotify';
+import { SongState } from './StateProvider';
+
+const spotify = new SpotifyWebApi();
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const [token, settoken] = useState('');
+
+  const { state, dispatch } = SongState();
+  console.log(state);
+
+  useEffect(() => {
+    const hash = getTokenFromResponse();
+    window.location.hash = '';
+    const token = hash.access_token;
+    console.log(token);
+
+    if (token) {
+      settoken(token);
+    }
+
+    spotify.setAccessToken(token);
+
+    spotify.getMe().then((user) =>
+      dispatch({
+        type: actionType.SET_USER,
+        payload: user,
+      }),
+    );
+  }, [dispatch]);
+
+  return <div className='App'>{token ? <Player /> : <Login />}</div>;
 }
 
 export default App;
