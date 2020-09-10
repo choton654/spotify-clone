@@ -13,18 +13,20 @@ function App() {
   const [token, settoken] = useState('');
 
   const { state, dispatch } = SongState();
-  console.log(state);
 
   useEffect(() => {
     const hash = getTokenFromResponse();
     window.location.hash = '';
     const token = hash.access_token;
-    console.log(token);
 
     if (token) {
       settoken(token);
-    }
 
+      dispatch({
+        type: actionType.SET_TOKEN,
+        payload: token,
+      });
+    }
     spotify.setAccessToken(token);
 
     spotify.getMe().then((user) =>
@@ -33,9 +35,27 @@ function App() {
         payload: user,
       }),
     );
+
+    spotify.getUserPlaylists().then((playlist) => {
+      dispatch({
+        type: actionType.SET_PLAYLIST,
+        payload: playlist,
+      });
+    });
+
+    spotify
+      .getPlaylist('37i9dQZEVXcJZyENOWUFo7')
+      .then((res) => {
+        console.log('discover', res);
+        dispatch({
+          type: actionType.SET_DISCOVER_WEEKLY,
+          payload: res,
+        });
+      })
+      .catch((err) => console.error(err));
   }, [dispatch]);
 
-  return <div className='App'>{token ? <Player /> : <Login />}</div>;
+  return <div className='App'>{token ? <Player spotify /> : <Login />}</div>;
 }
 
 export default App;
